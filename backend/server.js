@@ -1,11 +1,26 @@
 const express = require('express');
 const cors = require('cors');
-const helmet = require('helmet');
 const compression = require('compression');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
-const slowDown = require('express-slow-down');
 require('dotenv').config();
+
+// 🛡️ IMPORTAR SISTEMAS DE SEGURIDAD MILITAR
+const { 
+  globalLimiter, 
+  authLimiter, 
+  apiLimiter, 
+  uploadLimiter,
+  speedLimiter,
+  suspiciousBehaviorDetection,
+  advancedInputValidation,
+  csrfProtection,
+  autoBlacklist,
+  extremeHelmet,
+  honeypotMiddleware
+} = require('./middleware/securityMiddleware');
+const { ddosMiddleware } = require('./middleware/ddosProtection');
+const { intrusionDetectionMiddleware } = require('./middleware/intrusionDetection');
+const { encryptResponse, decryptRequest } = require('./middleware/encryptionMiddleware');
 
 const authRoutes = require('./routes/auth');
 const analysisRoutes = require('./routes/analysis');
@@ -17,45 +32,19 @@ const logger = require('./utils/logger');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// 🔒 SEGURIDAD HARDCORE
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
-      scriptSrc: ["'self'", "https://cdn.tailwindcss.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://generativelanguage.googleapis.com"],
-    },
-  },
-  crossOriginEmbedderPolicy: false
-}));
+// 🛡️ SEGURIDAD NIVEL MILITAR - ORDEN CRÍTICO
+app.use(extremeHelmet);
+app.use(honeypotMiddleware);
+app.use(autoBlacklist);
+app.use(ddosMiddleware);
+app.use(intrusionDetectionMiddleware);
+app.use(suspiciousBehaviorDetection);
 
 // 🚀 PERFORMANCE Y LOGGING
 app.use(compression());
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
 
-// 🛡️ RATE LIMITING AGRESIVO
-const globalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 100, // 100 requests por IP
-  message: { error: 'Demasiadas solicitudes. Intenta más tarde.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 20, // 20 análisis por 15 min
-  message: { error: 'Límite de análisis alcanzado. Espera 15 minutos.' }
-});
-
-const speedLimiter = slowDown({
-  windowMs: 15 * 60 * 1000,
-  delayAfter: 10,
-  delayMs: 500
-});
-
+// 🛡️ RATE LIMITING MILITAR
 app.use(globalLimiter);
 app.use('/api', speedLimiter);
 
@@ -72,6 +61,14 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// 🔐 PROTECCIÓN CSRF Y ENCRIPTACIÓN
+app.use(csrfProtection);
+app.use(decryptRequest);
+app.use(encryptResponse);
+
+// 🛡️ VALIDACIÓN AVANZADA GLOBAL
+app.use(advancedInputValidation);
+
 // 📊 HEALTH CHECK
 app.get('/health', (req, res) => {
   res.json({ 
@@ -83,9 +80,22 @@ app.get('/health', (req, res) => {
 });
 
 // 🛣️ RUTAS
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/analysis', apiLimiter, analysisRoutes);
-app.use('/api/creative', apiLimiter, creativeRoutes);
+app.use('/api/creative', apiLimiter, uploadLimiter, creativeRoutes);
+
+// 📊 ENDPOINT DE ESTADÍSTICAS DE SEGURIDAD (SOLO ADMIN)
+app.get('/api/security/stats', (req, res) => {
+  // TODO: Añadir autenticación de admin
+  const { ddosProtection } = require('./middleware/ddosProtection');
+  const { ids } = require('./middleware/intrusionDetection');
+  
+  res.json({
+    ddos: ddosProtection.getStats(),
+    intrusion: ids.getStats(),
+    timestamp: new Date().toISOString()
+  });
+});
 
 // 🚨 ERROR HANDLING
 app.use(notFound);
