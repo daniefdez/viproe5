@@ -1,46 +1,265 @@
-@@ .. @@
-     const handleGenerateImage = async (promptToUse?: string) => {
-         const finalPrompt = promptToUse || editablePrompt;
--        if (!finalPrompt.trim()) {
-+        
-+        // Enhanced validation
-+        if (!finalPrompt || typeof finalPrompt !== 'string' || !finalPrompt.trim()) {
-             setGenerationError("El prompt no puede estar vacío.");
-             return;
-         }
-+        
-+        // Check prompt length
-+        if (finalPrompt.trim().length > 2000) {
-+            setGenerationError("El prompt es demasiado largo. Máximo 2000 caracteres.");
-+            return;
-+        }
-+        
-+        // Check for inappropriate content patterns
-+        const inappropriatePatterns = [
-+            /\b(nude|naked|sex|porn|explicit)\b/i,
-+            /\b(violence|blood|gore|death)\b/i,
-+            /\b(hate|racist|discrimination)\b/i
-+        ];
-+        
-+        for (const pattern of inappropriatePatterns) {
-+            if (pattern.test(finalPrompt)) {
-+                setGenerationError("El prompt contiene contenido no apropiado.");
-+                return;
-+            }
-+        }
-+        
-         setIsGeneratingImage(true);
-@@ .. @@
-                             <textarea
-                                 id="prompt-editor"
-                                 rows={5}
-                                 value={editablePrompt}
-                                 onChange={(e) => setEditablePrompt(e.target.value)}
-+                                maxLength={2000}
-                                 className="w-full p-3 bg-slate-900/70 border border-slate-700 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition text-slate-300 font-mono text-sm"
-                                 placeholder="Ej: A photorealistic portrait of an elderly fisherman..."
-                             />
-+                            <div className="text-xs text-slate-500 mt-1 text-right">
-+                                {editablePrompt.length}/2000 caracteres
-+                            </div>
-                         </div>
+import React, { useState, useRef, useEffect } from 'react';
+import { useAuth } from './AuthProvider';
+import { LoginForm } from './LoginForm';
+import { apiService } from '../services/apiService';
+import { Loader } from './Loader';
+import { CreativeAnalysisResult } from '../types';
+
+export const CreativeStudio: React.FC = () => {
+    const { isAuthenticated, user } = useAuth();
+    const [savedState, setSavedState] = useState(() => {
+        const saved = localStorage.getItem('creativeStudioState');
+        return saved ? JSON.parse(saved) : {
+            editablePrompt: '',
+            generatedImageUrl: null,
+            creativeAnalysis: null
+        };
+    });
+
+    const [editablePrompt, setEditablePrompt] = useState(savedState.editablePrompt);
+    const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(savedState.generatedImageUrl);
+    const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+    const [generationError, setGenerationError] = useState<string | null>(null);
+    const [creativeAnalysis, setCreativeAnalysis] = useState<CreativeAnalysisResult | null>(savedState.creativeAnalysis);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisError, setAnalysisError] = useState<string | null>(null);
+
+    const studioRef = useRef<HTMLDivElement>(null);
+
+    // Mostrar login si no está autenticado
+    if (!isAuthenticated) {
+        return (
+            <div className="w-full max-w-md mx-auto">
+                <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-slate-200 mb-2">Estudio Creativo</h2>
+                    <p className="text-slate-400">Inicia sesión para crear arte con IA</p>
+                </div>
+                <LoginForm />
+            </div>
+        );
+    }
+
+    useEffect(() => {
+        const stateToSave = {
+            editablePrompt,
+            generatedImageUrl,
+            creativeAnalysis
+        };
+        localStorage.setItem('creativeStudioState', JSON.stringify(stateToSave));
+    }, [editablePrompt, generatedImageUrl, creativeAnalysis]);
+
+    const handleGenerateImage = async (promptToUse?: string) => {
+        const finalPrompt = promptToUse || editablePrompt;
+        
+        // Enhanced validation
+        if (!finalPrompt || typeof finalPrompt !== 'string' || !finalPrompt.trim()) {
+            setGenerationError("El prompt no puede estar vacío.");
+            return;
+        }
+        
+        // Check prompt length
+        if (finalPrompt.trim().length > 2000) {
+            setGenerationError("El prompt es demasiado largo. Máximo 2000 caracteres.");
+            return;
+        }
+        
+        // Check for inappropriate content patterns
+        const inappropriatePatterns = [
+            /\b(nude|naked|sex|porn|explicit)\b/i,
+            /\b(violence|blood|gore|death)\b/i,
+            /\b(hate|racist|discrimination)\b/i
+        ];
+        
+        for (const pattern of inappropriatePatterns) {
+            if (pattern.test(finalPrompt)) {
+                setGenerationError("El prompt contiene contenido no apropiado.");
+                return;
+            }
+        }
+        
+        setIsGeneratingImage(true);
+        setGenerationError(null);
+        setCreativeAnalysis(null);
+
+        try {
+            const response = await apiService.generateImage(finalPrompt);
+            const imageUrl = response.imageUrl;
+            setGeneratedImageUrl(imageUrl);
+        } catch (error) {
+            console.error('Error generating image:', error);
+            setGenerationError("Error al generar la imagen. Por favor, intenta de nuevo.");
+        } finally {
+            setIsGeneratingImage(false);
+        }
+    };
+
+    const handleAnalyzeImage = async () => {
+        if (!generatedImageUrl) return;
+
+        setIsAnalyzing(true);
+        setAnalysisError(null);
+
+        try {
+            const result = await apiService.analyzeCreativeImage(generatedImageUrl);
+            setCreativeAnalysis(result);
+        } catch (error) {
+            console.error('Error analyzing image:', error);
+            setAnalysisError("Error al analizar la imagen. Por favor, intenta de nuevo.");
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
+
+    const handleRemix = (remixPrompt: string) => {
+        setEditablePrompt(remixPrompt);
+        if (studioRef.current) {
+            studioRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    };
+
+    return (
+        <div className="w-full">
+            {/* Hero Section */}
+            <div className="text-center mb-12">
+                <h1 className="text-5xl font-extrabold text-slate-100">Explora el Universo del Arte IA</h1>
+                <p className="text-lg text-slate-400 mt-2 max-w-3xl mx-auto">
+                    Descubre un flujo infinito de arte generado por IA. Captura la esencia de cualquier obra con "Remezclar" y transforma la inspiración en tu propia creación única.
+                </p>
+                <p className="text-xs text-slate-500 mt-2">Conectado como: {user?.email}</p>
+            </div>
+
+            {/* Creative Studio */}
+            <div ref={studioRef} className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 shadow-2xl">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>
+                    <h2 className="text-2xl font-bold text-slate-200">Estudio Creativo</h2>
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-8">
+                    {/* Left Column - Prompt Editor */}
+                    <div className="space-y-6">
+                        <div>
+                            <label htmlFor="prompt-editor" className="block text-sm font-medium text-slate-300 mb-2">
+                                Describe tu visión artística
+                            </label>
+                            <textarea
+                                id="prompt-editor"
+                                rows={5}
+                                value={editablePrompt}
+                                onChange={(e) => setEditablePrompt(e.target.value)}
+                                maxLength={2000}
+                                className="w-full p-3 bg-slate-900/70 border border-slate-700 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition text-slate-300 font-mono text-sm"
+                                placeholder="Ej: A photorealistic portrait of an elderly fisherman..."
+                            />
+                            <div className="text-xs text-slate-500 mt-1 text-right">
+                                {editablePrompt.length}/2000 caracteres
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => handleGenerateImage()}
+                            disabled={isGeneratingImage || !editablePrompt.trim()}
+                            className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 disabled:from-slate-600 disabled:to-slate-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-200 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        >
+                            {isGeneratingImage ? (
+                                <>
+                                    <Loader size="sm" />
+                                    Generando...
+                                </>
+                            ) : (
+                                'Generar Imagen'
+                            )}
+                        </button>
+
+                        {generationError && (
+                            <div className="p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
+                                {generationError}
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column - Generated Image */}
+                    <div className="space-y-6">
+                        {generatedImageUrl ? (
+                            <div className="space-y-4">
+                                <div className="relative group">
+                                    <img
+                                        src={generatedImageUrl}
+                                        alt="Generated artwork"
+                                        className="w-full rounded-lg shadow-lg"
+                                    />
+                                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                        <button
+                                            onClick={handleAnalyzeImage}
+                                            disabled={isAnalyzing}
+                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                                        >
+                                            {isAnalyzing ? 'Analizando...' : 'Analizar Imagen'}
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {analysisError && (
+                                    <div className="p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
+                                        {analysisError}
+                                    </div>
+                                )}
+
+                                {creativeAnalysis && (
+                                    <div className="bg-slate-900/70 rounded-lg p-4 border border-slate-700">
+                                        <h3 className="text-lg font-semibold text-slate-200 mb-3">Análisis Creativo</h3>
+                                        
+                                        <div className="space-y-3">
+                                            <div>
+                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Descripción</h4>
+                                                <p className="text-sm text-slate-400">{creativeAnalysis.description}</p>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Estilo Artístico</h4>
+                                                <p className="text-sm text-slate-400">{creativeAnalysis.artisticStyle}</p>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Elementos Técnicos</h4>
+                                                <div className="flex flex-wrap gap-1">
+                                                    {creativeAnalysis.technicalElements.map((element, index) => (
+                                                        <span key={index} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded">
+                                                            {element}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <h4 className="text-sm font-medium text-slate-300 mb-2">Variaciones Sugeridas</h4>
+                                                <div className="space-y-1">
+                                                    {creativeAnalysis.remixSuggestions.map((suggestion, index) => (
+                                                        <button
+                                                            key={index}
+                                                            onClick={() => handleRemix(suggestion)}
+                                                            className="block w-full text-left p-2 bg-slate-800/50 hover:bg-slate-700/50 rounded text-xs text-slate-300 transition-colors"
+                                                        >
+                                                            {suggestion}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="aspect-square bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-700 flex items-center justify-center">
+                                <div className="text-center text-slate-500">
+                                    <div className="text-4xl mb-2">🎨</div>
+                                    <p>Tu obra maestra aparecerá aquí</p>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
