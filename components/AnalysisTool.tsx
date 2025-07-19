@@ -31,39 +31,36 @@ export const AnalysisTool: React.FC = () => {
     }
 
     useEffect(() => {
-        try {
-            const loadSavedState = () => {
-                try {
-                    const savedState = localStorage.getItem('analysisToolState');
-                    if (!savedState) return;
-                    
-                    const parsed = JSON.parse(savedState);
-                    
-                    // Validate the structure of saved data
-                    if (typeof parsed !== 'object' || parsed === null) {
-                        localStorage.removeItem('analysisToolState');
-                        return;
-                    }
-                    
-                    // Only restore valid data
-                    if (parsed.imageUrl && typeof parsed.imageUrl === 'string') {
-                        setImageUrl(parsed.imageUrl);
-                    }
-                    if (parsed.analysis && typeof parsed.analysis === 'object') {
-                        setAnalysis(parsed.analysis);
-                    }
-                    if (Array.isArray(parsed.messages)) {
-                        setMessages(parsed.messages);
-                    }
-                } catch (e) {
-                    console.error("Error al cargar el estado desde localStorage", e);
+        const loadSavedState = () => {
+            try {
+                const savedState = localStorage.getItem('analysisToolState');
+                if (!savedState) return;
+                
+                const parsed = JSON.parse(savedState);
+                
+                // Validate the structure of saved data
+                if (typeof parsed !== 'object' || parsed === null) {
                     localStorage.removeItem('analysisToolState');
+                    return;
                 }
-            };
-            
-            loadSavedState();
-        } catch (e) {
-        }
+                
+                // Only restore valid data
+                if (parsed.imageUrl && typeof parsed.imageUrl === 'string') {
+                    setImageUrl(parsed.imageUrl);
+                }
+                if (parsed.analysis && typeof parsed.analysis === 'object') {
+                    setAnalysis(parsed.analysis);
+                }
+                if (Array.isArray(parsed.messages)) {
+                    setMessages(parsed.messages);
+                }
+            } catch (e) {
+                console.error("Error al cargar el estado desde localStorage", e);
+                localStorage.removeItem('analysisToolState');
+            }
+        };
+        
+        loadSavedState();
     }, []);
     
     useEffect(() => {
