@@ -1,12 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
-import { LoginForm } from './LoginForm';
-import { apiService } from '../services/apiService';
 import { Loader } from './Loader';
 import { CreativeAnalysisResult } from '../types';
+import { generateImage, analyzeCreativeImage } from '../services/geminiService';
 
 export const CreativeStudio: React.FC = () => {
-    const { isAuthenticated, user } = useAuth();
     const [savedState, setSavedState] = useState(() => {
         const saved = localStorage.getItem('creativeStudioState');
         return saved ? JSON.parse(saved) : {
@@ -26,18 +23,6 @@ export const CreativeStudio: React.FC = () => {
 
     const studioRef = useRef<HTMLDivElement>(null);
 
-    // Mostrar login si no está autenticado
-    if (!isAuthenticated) {
-        return (
-            <div className="w-full max-w-md mx-auto">
-                <div className="text-center mb-8">
-                    <h2 className="text-3xl font-bold text-slate-200 mb-2">Estudio Creativo</h2>
-                    <p className="text-slate-400">Inicia sesión para crear arte con IA</p>
-                </div>
-                <LoginForm />
-            </div>
-        );
-    }
 
     useEffect(() => {
         const stateToSave = {
@@ -82,8 +67,7 @@ export const CreativeStudio: React.FC = () => {
         setCreativeAnalysis(null);
 
         try {
-            const response = await apiService.generateImage(finalPrompt);
-            const imageUrl = response.imageUrl;
+            const imageUrl = await generateImage(finalPrompt);
             setGeneratedImageUrl(imageUrl);
         } catch (error) {
             console.error('Error generating image:', error);
@@ -100,7 +84,7 @@ export const CreativeStudio: React.FC = () => {
         setAnalysisError(null);
 
         try {
-            const result = await apiService.analyzeCreativeImage(generatedImageUrl);
+            const result = await analyzeCreativeImage(generatedImageUrl);
             setCreativeAnalysis(result);
         } catch (error) {
             console.error('Error analyzing image:', error);
@@ -128,7 +112,6 @@ export const CreativeStudio: React.FC = () => {
                 <p className="text-xs text-slate-500 mt-2">Conectado como: {user?.email}</p>
             </div>
 
-            {/* Creative Studio */}
             <div ref={studioRef} className="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-8 border border-slate-700/50 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                     <div className="w-3 h-3 bg-yellow-500 rounded-full animate-pulse"></div>

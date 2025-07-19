@@ -1,7 +1,4 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { useAuth } from './AuthProvider';
-import { LoginForm } from './LoginForm';
-import { apiService } from '../services/apiService';
 import { ImageUploader } from './ImageUploader';
 import { AnalysisResult, Message } from '../types';
 
@@ -12,8 +9,6 @@ export const AnalysisTool: React.FC = () => {
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
     const [messages, setMessages] = useState<Message[]>([]);
-    const [chatSession, setChatSession] = useState<any>(null);
-    const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [isSending, setIsSending] = useState(false);
     const [error, setError] = useState<string | null>(null);
     
@@ -23,19 +18,6 @@ export const AnalysisTool: React.FC = () => {
             <div className="w-full max-w-md mx-auto">
                 <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-slate-200 mb-2">Análisis Avanzado</h2>
-                    <p className="text-slate-400">Inicia sesión para acceder al análisis forense</p>
-                </div>
-                <LoginForm onSuccess={() => setShowLogin(false)} />
-            </div>
-        );
-    }
-
-    useEffect(() => {
-        const loadSavedState = () => {
-            try {
-                const savedState = localStorage.getItem('analysisToolState');
-                if (!savedState) return;
-                
                 const parsed = JSON.parse(savedState);
                 
                 // Validate the structure of saved data
@@ -152,7 +134,6 @@ export const AnalysisTool: React.FC = () => {
     }, [chatSession, isSending]);
 
     const handleReset = () => {
-        if (imageUrl) {
             URL.revokeObjectURL(imageUrl);
         }
         setImageFile(null);

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './components/AuthProvider';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { About } from './components/About';
@@ -27,7 +26,6 @@ export const App = () => {
   };
 
   return (
-    <AuthProvider>
       <div className="relative min-h-screen text-gray-200 font-sans flex flex-col items-center overflow-x-hidden bg-gray-900">
         <Header setView={setView} />
         <main className="flex-grow w-full">
@@ -35,6 +33,5 @@ export const App = () => {
         </main>
         <Footer setView={setView} />
       </div>
-    </AuthProvider>
   );
 };

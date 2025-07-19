@@ -65,6 +65,10 @@ const validateFile = (file: File): boolean => {
         throw new Error('El archivo es demasiado grande. El tamaño máximo es de 10MB.');
     }
     
+    if (file.size === 0) {
+        throw new Error('El archivo está vacío.');
+    }
+    
     return true;
 };
 
