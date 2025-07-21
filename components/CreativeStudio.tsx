@@ -3,6 +3,13 @@ import { Loader } from './Loader';
 import { CreativeAnalysisResult } from '../types';
 import { generateImage, analyzeCreativeImage } from '../services/geminiService';
 
+interface CreativeAnalysisResult {
+    description: string;
+    artisticStyle: string;
+    technicalElements: string[];
+    remixSuggestions: string[];
+}
+
 export const CreativeStudio: React.FC = () => {
     const [savedState, setSavedState] = useState(() => {
         const saved = localStorage.getItem('creativeStudioState');
@@ -172,77 +179,3 @@ export const CreativeStudio: React.FC = () => {
                                         className="w-full rounded-lg shadow-lg"
                                     />
                                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                                        <button
-                                            onClick={handleAnalyzeImage}
-                                            disabled={isAnalyzing}
-                                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-                                        >
-                                            {isAnalyzing ? 'Analizando...' : 'Analizar Imagen'}
-                                        </button>
-                                    </div>
-                                </div>
-
-                                {analysisError && (
-                                    <div className="p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
-                                        {analysisError}
-                                    </div>
-                                )}
-
-                                {creativeAnalysis && (
-                                    <div className="bg-slate-900/70 rounded-lg p-4 border border-slate-700">
-                                        <h3 className="text-lg font-semibold text-slate-200 mb-3">Análisis Creativo</h3>
-                                        
-                                        <div className="space-y-3">
-                                            <div>
-                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Descripción</h4>
-                                                <p className="text-sm text-slate-400">{creativeAnalysis.description}</p>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Estilo Artístico</h4>
-                                                <p className="text-sm text-slate-400">{creativeAnalysis.artisticStyle}</p>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium text-slate-300 mb-1">Elementos Técnicos</h4>
-                                                <div className="flex flex-wrap gap-1">
-                                                    {creativeAnalysis.technicalElements.map((element, index) => (
-                                                        <span key={index} className="px-2 py-1 bg-slate-800 text-slate-300 text-xs rounded">
-                                                            {element}
-                                                        </span>
-                                                    ))}
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <h4 className="text-sm font-medium text-slate-300 mb-2">Variaciones Sugeridas</h4>
-                                                <div className="space-y-1">
-                                                    {creativeAnalysis.remixSuggestions.map((suggestion, index) => (
-                                                        <button
-                                                            key={index}
-                                                            onClick={() => handleRemix(suggestion)}
-                                                            className="block w-full text-left p-2 bg-slate-800/50 hover:bg-slate-700/50 rounded text-xs text-slate-300 transition-colors"
-                                                        >
-                                                            {suggestion}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <div className="aspect-square bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-700 flex items-center justify-center">
-                                <div className="text-center text-slate-500">
-                                    <div className="text-4xl mb-2">🎨</div>
-                                    <p>Tu obra maestra aparecerá aquí</p>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
