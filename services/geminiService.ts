@@ -35,10 +35,10 @@ export const analyzeCreativeImage = async (imageUrl: string): Promise<CreativeAn
             artisticStyle: "Estilo digital moderno con influencias fotorrealistas",
             technicalElements: ["Composición equilibrada", "Uso efectivo de la luz", "Paleta de colores armoniosa", "Detalles bien definidos"],
             remixSuggestions: [
-                `${editablePrompt}, with dramatic cinematic lighting`,
-                `${editablePrompt}, in the style of a Renaissance painting`,
-                `${editablePrompt}, with vibrant neon colors and cyberpunk aesthetic`,
-                `${editablePrompt}, as a minimalist black and white composition`
+                "A majestic landscape with dramatic cinematic lighting, 8k resolution",
+                "Portrait in the style of a Renaissance painting, oil on canvas",
+                "Futuristic cityscape with vibrant neon colors and cyberpunk aesthetic",
+                "Minimalist black and white composition, high contrast photography"
             ]
         };
         return mockAnalysis;
