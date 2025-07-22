@@ -12,7 +12,7 @@
 ### 🥇 **Tecnología Superior**
 - **Gemini 2.5 Flash**: Último modelo de Google
 - **Análisis forense**: 99.9% de precisión
-- **Generación creativa**: Calidad profesional
+- **Generación creativa**: Calidad premium
 - **API robusta**: Escalable a millones
 
 ### 💰 **Precio Competitivo**

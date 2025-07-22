@@ -29,7 +29,7 @@ export const Home: React.FC<HomeProps> = ({ setView }) => {
                 { icon: <IconShieldCheck className="w-6 h-6" />, title: "Authenticity Verification", description: "Verify image integrity and origin" },
                 { icon: <IconZap className="w-6 h-6" />, title: "Real-time Analysis", description: "Instant results with detailed reports" }
             ],
-            cta: { text: "Analyze Images", action: () => setView('forensic') }
+            cta: { text: "Analyze Images", action: () => setView('analysis') }
         },
         api: {
             title: "Developer API",
@@ -39,7 +39,7 @@ export const Home: React.FC<HomeProps> = ({ setView }) => {
                 { icon: <IconChip className="w-6 h-6" />, title: "High Performance", description: "Optimized for speed and reliability" },
                 { icon: <IconGallery className="w-6 h-6" />, title: "Comprehensive Docs", description: "Detailed documentation and examples" }
             ],
-            cta: { text: "View Documentation", action: () => setView('api') }
+            cta: { text: "View Documentation", action: () => setView('docs') }
         }
     };
 
@@ -63,7 +63,7 @@ export const Home: React.FC<HomeProps> = ({ setView }) => {
                             Start Creating
                         </button>
                         <button 
-                            onClick={() => setView('forensic')}
+                            onClick={() => setView('analysis')}
                             className="px-8 py-4 border border-purple-400 rounded-lg font-semibold hover:bg-purple-400/10 transition-all duration-200"
                         >
                             Analyze Images
@@ -79,7 +79,7 @@ export const Home: React.FC<HomeProps> = ({ setView }) => {
                     <div className="flex flex-col sm:flex-row justify-center gap-4">
                         <TabButton title="Creative Studio" icon={<IconWand className="w-5 h-5" />} isActive={activeTab === 'studio'} onClick={() => setActiveTab('studio')} />
                         <TabButton title="Forensic Analysis" icon={<IconShieldCheck className="w-5 h-5" />} isActive={activeTab === 'forensic'} onClick={() => setActiveTab('forensic')} />
-                        <TabButton title="API para Desarrolladores" icon={<IconCode className="w-5 h-5" />} isActive={activeTab === 'api'} onClick={() => setActiveTab('api')} />
+                        <TabButton title="Developer API" icon={<IconCode className="w-5 h-5" />} isActive={activeTab === 'api'} onClick={() => setActiveTab('api')} />
                     </div>
                 </div>
 
